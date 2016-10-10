@@ -2,17 +2,49 @@
 
 # python 高级教程
 
-## pep8 编码规范
+## 编码规范
+### 错误认知
 
-官网规范地址
++ 这很浪费时间
++ 我是个艺术家
++ 所有人都能穿的鞋不会合任何人的脚
++ 我善长制定编码规范
 
-    https://www.python.org/dev/peps/pep-0008/
+### 正确认知
+
++ 促进团队合作
++ 减少bug处理 
++ 提高可读性，降低维护成本 
++ 有助于代码审查
++ 养成习惯，有助于程序员自身的成长
+
+### pep8 编码规范
+
+Python Enhancement Proposals ：python改进方案
+
+[https://www.python.org/dev/peps/](https://www.python.org/dev/peps/)
+
+![pep](media/pep0.png)
+
+pep8 官网规范地址
+
+[https://www.python.org/dev/peps/pep-0008/](https://www.python.org/dev/peps/pep-0008/)
+
+![pep8](media/pep8.png)
+
+
+风格指南强调一致性。项目、模块或函数保持一致都很重要。
+
+两张代码图说明编码风格
+
+https://my.oschina.net/u/1433482/blog/464444?p=1
+http://blog.sae.sina.com.cn/archives/4781
 
 
 
 
 ## 数据类型进阶
-> 在基础班，我们学习了Python中的基础数据类型。但是，这些基础数据类型有时不能满足我们的实际开发需求。例如，在表示一个分数时，基础数据类型里面却没有分数。当然，通过基础数据类型，我们可以构造出一个分数类型。但是，这就是一个典型的重复造轮子的行为。因为Python已经为我们造好了这些“轮子”。Python的标准库中还拥有很多扩展的数据类型。数字类型、字符串类型，列表类型，字典类型，集合类型等等类型，都拥有其扩展类型。
+在基础班，我们学习了Python中的基础数据类型。但是，这些基础数据类型有时不能满足我们的实际开发需求。例如，在表示一个分数时，基础数据类型里面却没有分数。当然，通过基础数据类型，我们可以构造出一个分数类型。但是，这就是一个典型的重复造轮子的行为。因为Python已经为我们造好了这些“轮子”。Python的标准库中还拥有很多扩展的数据类型。数字类型、字符串类型，列表类型，字典类型，集合类型等等类型，都拥有其扩展类型。
 
 ### 数字类型扩展
 #### 小数数字（decimal）
@@ -20,45 +52,81 @@
 小数类型是Python标准库自带的一个模块，使用时需要导入decimal模块 `import decimal`
 
 + 特征: 固定精度浮点数
-
 + 使用场景: 货币业务
++ 入门示例
 
-+ 用法: 
-    + 构造一个小数: decimal.Decimal(self, /, *args, **kwargs)
-    
-        a = decimal.Decimal(1.2578)
-        
-        b = decimal.Decimal(2.145)
-    + 小数运算
-        
-        c = a + b
-        
-    + 获取上下文精度
-    
-        context = decimal.getcontext()
-        context.prec
-    
-    + 设置上下文精度
-    
-        + 方法一
-            
-            content.prec = 2
-            
-        + 方法二
-            + 构造一个上下文
-                c = decimal.Context(prec=2)
 
-            + 设置上下文精度
-                decimal.setcontext(c)       
-        
-    + 转换成浮点数/字符串
+```python
+In [1]: import decimal
+
+In [2]: a=decimal.Decimal(3.14)
+
+In [3]: b=decimal.Decimal(5.67)
+
+In [4]: print a
+3.140000000000000124344978758017532527446746826171875
+
+In [5]: print b
+5.6699999999999999289457264239899814128875732421875
+
+In [6]: c=a+b
+
+In [7]: print c
+8.810000000000000053290705182    #默认28位精度
+
+In [8]: decimal.getcontext().prec=4     #设置4位精度
+
+In [9]: d=a+b
+
+In [10]: print d
+8.810
+
+In [11]: type(d)
+Out[11]: decimal.Decimal
+```
+
+
++ 上下文运行环境
+
+        decimal.getcontext()
+        Context(prec=28, rounding=ROUND_HALF_EVEN, Emin=-999999999, Emax=999999999, 
+        capitals=1, flags=[Inexact, Rounded], traps=[Overflow, DivisionByZero,
+         InvalidOperation])
+
+        精度位数prec，舍弃位数规则rounding(ROUND_HALF_EVEN是half时向偶数靠近)，
+        指数的最大值最小值Emin、Emax，科学计数法e的大小写capitals
+
+        科学计数法：1<a<10  ax10^n 表示为 aEn
+
+
++ 设置上下文精度
+
+```python
+decimal.getcontext().prec=4     #方法一
+
+context = decimal.getcontext()  #方法二
+content.prec = 2
+decimal.setcontext(content)       
+```
     
-        float(a)、str(a)
+        
++ 转换成浮点数
+    
+```python
+a=decimal.Decimal(3.14)
+float(a)
+```
++ 转换成字符串
+
+```python
+a=decimal.Decimal(3.14)
+str(a)
+```
 
     
 #### 分数类型（fractions）
-分数类型是一个有理数对象，它明确的保留一个分子和一个分母。从而避免了某种浮点数的不精确性和局限性。
-它也是Python标准库中的一员，使用时也需要导入fractions模块 `import fractions`
+分数类型明确的保留一个分子和一个分母。从而避免了某种浮点数的不精确性和局限性。
+它也是Python标准库中的一员，使用时需要导入fractions模块 `import fractions`
 
 + 特征: 有理数、精确、自动简化结果
 
@@ -66,109 +134,45 @@
 
 + 用法: 
     
-    + 构造一个分数
-        
-        + fractions.Fraction(self, /, *args, **kwargs)
-        
-            a = fractions.Fraction(1, 3)
-        
-            b = fractions.Fraction(1.25)
-            
-            c = fractions.Fraction('.25')
-            
-            d = fractions.Fraction('12/13')
-            
-            e = fractions.Fraction(decimal.Decimal(1.23))
-            
-        + 两个参数形式说明
-        
-            参数一(numerator)默认为0，参数二(denominator)默认为1
-        
-    + 分数运算
-        
-        f = a + b
-        
-    + 比较(小数和分数)
-        
-        分数(fraction.Fraction)通过有理数(rational)保证精度
-        
-        小数(decimal.Decimal)通过限制精度(precision）保证精度
-        
-#### 复数（complex）
-复数是有理数和无理数的集合。复数的表示使用内建函数complex
+```python
+class fractions.Fraction(numerator=0, denominator=1) 
+class fractions.Fraction(other_fraction) 
+class fractions.Fraction(float) 
+class fractions.Fraction(decimal) 
+class fractions.Fraction(string) 
 
-+ 构造一个复数
+#例如：
+a = fractions.Fraction(1, 3)
+b = fractions.Fraction(1.25)
+c = fractions.Fraction('.25')
+d = fractions.Fraction('12/13')
+e = fractions.Fraction(decimal.Decimal(1.23))
+f = a + b
+```
+            
 
-    + a + bj
-    
-        a, b均为浮点数， j/J是固定用法
-        
-        c = 1.1 + 2.3j
-    
-    + complex
-    
-        c = complex(1.1, 2.3)
-    
-+ 相关操作
-    
-    + 共轭复数
-    
-        c.conjugate()
-        
-    + 实部、虚部
-    
-        c.real/c.imag
 
 #### 布尔类型（bool）
-bool是一个新的数据类型，其值为True/False。True/False是预先定义的内置的变量名。True/False是bool的实例。本质上，bool是int的子类，True/False只是重定义了str/repr，让其表现形式变了而已。
+bool是一个新的数据类型，其值为True/False。
 
-+ 哪些对象属于False
+哪些对象属于False:
 
-    任意的空数据结构: 0， 0.0， ""(空字符串)， ()(空元祖)， []\(空列表\)， {}(空字典)，set()(空集合)，None，空查询集。
-+ 非False即为True
+    任意的空数据结构: 0， 0.0， ""(空字符串)， ()(空元祖)， [](空列表)， {}(空字典)，set()(空集合)，None。
+
+非False即为True
 
 #### numpy模块
 + 具体参见 [Numpy相关博客](http://blog.chinaunix.net/uid-21633169-id-4408596.html)
 
 
 ### 字符串扩展
-Python中的字符串模块string，在py2和py3之间有很大的区别。原来string模块存在于py2中的函数在py3中取消了。因为这些都可以在字符串对象中或是其他地方找到。在string中，常用的有:
+Python中的字符串模块string，在py2和py3之间有很大的区别。原来string模块存在于py2中的函数在py3中取消了。因为这些都可以在字符串对象中或是其他地方找到。
 
-+ ascii_letters: (大小写字母)
-    
-    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+![string模块](media/string.png)
 
-+ ascii_lowercase: (小写字母)
+在string中，常用的有:
 
-    "abcdefghijklmnopqrstuvwxyz"
-
-+ ascii_uppercase: (大写字母)
-    
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    
-+ digits: (0-9)
-
-    "0123456789"
-    
-+ hexdigits: (十六进制)
-
-    "0123456789abcdefABCDEF"
-
-+ octdigits: (八进制)
-    
-    "01234567"
-    
-+ printable: (可打印)
-    
-    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ \t\n\r\x0b\x0c"
-
-+ punctuation: (标点)
-    
-    '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
-    
-+ whitespace: (空白)
-    
-    ' \t\n\r\x0b\x0c'
+![string模块常用](media/string2.png)
 
 注意: 程序中一般使用string模块中的常量，不要自己写，容易出错。
     
@@ -547,6 +551,8 @@ Python中的字符串模块string，在py2和py3之间有很大的区别。原�
     + 生成器函数 vs 生成器表达式
 
 ### 装饰器
+#### 闭包
+如果在一个内部函数里，对在外部作用域的变量(但不是全局变量)进行引用，那么内部函数就被认为是闭包(_closure)。定义在外部函数内的但由内部函数引用或者使用的变量被称为自由变量。
 #### 装饰器简介
 
 #### 二层装饰器
@@ -563,6 +569,27 @@ Python中的字符串模块string，在py2和py3之间有很大的区别。原�
 
 
 ## 类进阶
+实例属性,实例对象独有的属性
+
+类属性
+
+类名访问类属性
+实例中无同名属性时，可访问到类属性，当定义同名实例属性时，则无法访问
+
+>使用实例属性去修改类属性十分危险，原因在于实例拥有自己的属性集，修改类属性需要使用类名，而不是实例名。 
+
+新式类和旧式类
+
+
+vars : 查看实例属性
+dir : 显示类属性和所有实例属性
+type : 显示类型
+
+
+子类没有实现__init__方法时，默认自动调用父类的。如定义__init__方法时，需自己手动调用父类的__init__方法。
+
+__doc__属性子类不继承，每个类均有自己的__doc__属性
+
 ### 运算符重载
 + 索引和分片
     + \_\_getitem\_\_ 和 \_\_setitem\_\_
@@ -598,11 +625,109 @@ Python中的字符串模块string，在py2和py3之间有很大的区别。原�
 
 
 ## 模块进阶
+
+文件是物理上组织模块的方法，一个文件可以看作是一个独立的模块，一个模块也可以看作是一个文件，模块的文件名就是模块的名字加上扩展名.py
+
+### 模块导入顺序
+
+1. python标准库模块
+2. python第三方模块
+3. 应用程序自定义模块
+
+用一个空行分割这三类模块的导入语句
+
+导入模块
+```python
+import module1
+from module1 import xx
+from module1 import xx, yy, zz    #不建议
+from module1 import (xx, yy, zz)  #程序员正确姿势
+from module1 import *             #避免使用，命名覆盖冲突
+
+import module1 as md1             #简化名称
+from module1 import xxxx as 4x    #简化名称
+```
+
 ### 模块搜索路径
+当导入模块时，需要从一个预定义区域中查找。
+
+![导入模块](media/module.png)
+
+#### 搜索路径 
+
+```python
+import sys
+sys.path
+```
+![搜索路径](media/path.png)
+#### 路径搜索
+
+从上面列出的目录里依次查找要导入的模块文件
+
+#### 程序执行时导入模块路径
+
+```python
+sys.path.append('/home/itcast/xxx')
+sys.path.insert(0, '/home/itcast/xxx')    #可以确保先搜索这个路径
+```
+#### 设置Linux下导入模块路径
+
+```shell
+echo $PYTHONPATH
+export PYTHONPATH=$PYTHONPATH:'/home/itcast/xxx'
+```
+
+#### 设置Windows下导入模块路径
+
+### 重新导入模块
+模块被导入后，`import module`不能重新导入模块，重新导入需用
+
+```python
+reload(module)
+```
+
+
 
 ### 循环导入
-+ 为什么会出现循环导入
-+ 怎样避免循环导入
+#### 为什么会出现循环导入
+
+![循环导入错误](media/importerr1.png)
+
+再看一个例子
+
+
+a.py
+```python
+from b import b 
+
+print '---------this is module a.py----------'
+def a():
+    print "hello, a"   
+    b() 
+
+a()
+```
+b.py
+```python
+from a import a
+
+print '----------this is module b.py----------'
+def b():
+    print "hello, b"
+
+def c():
+    a() 
+c()
+```
+运行python a.py
+
+![循环导入错误](media/importerr.png)
+
+#### 怎样避免循环导入
+
+1. 程序设计上分层，降低耦合
+2. 导入语句放在后面需要导入时再导入
+3. 放在函数体内导入
 
 ### importlib
 
@@ -655,6 +780,52 @@ is，检查两个对象的同一性，判断两个对象名是否指向同一地
 
 创建两个列表对象，即使它们的值相同，也是来源于不同的空间。因此is的比较结果为假
 也许有的朋友测试了一个如上图的例子，结果 is 竟然返回True。这不是代表它们是指向同一个对象，而是在内存中，小的整数和字符串被缓存复用了，所以is才告诉我们a和b是引用了相同的对象。
+
+### 语句执行时间
+
++ 测试语句运行时间
+```python
+python -mtimeit -s 'from decimal import Decimal' '3.14+5.67'
+python -mtimeit -s 'from decimal import Decimal' 'Decimal("3.14")+Decimal("5.67")'
+```
+![测试](media/timeittest.png)
+
++ 测试函数运行时间
+
+```python
+import time
+ 
+def time_me(fn):
+    def _wrapper(*args, **kwargs):
+        start = time.clock()
+        fn(*args, **kwargs)
+        print("%s cost %s second"%(fn.__name__, time.clock() - start))
+    return _wrapper
+ 
+@time_me
+def test(x, y):
+    time.sleep(0.1)
+ 
+@time_me
+def test2(x):
+    time.sleep(0.2)
+ 
+test(1, 2)
+test2(2)
+```
+
++ 测试文件运行时间
+
+```shell
+$ time -p python testfile.py
+
+Total time running : 1.3931210041 seconds
+real 1.49    表示的是执行脚本的总时间
+user 1.40    表示的是执行脚本消耗的CPU时间。
+sys 0.08     表示的是执行内核函数消耗的时间
+```
+
+
 
 ## 附录
 ### markdown语法
