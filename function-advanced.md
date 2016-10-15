@@ -59,13 +59,23 @@ def fun():
     # 修改全局变量，而不是创建一个新的 local 变量
     a = 2
 ```
-+ builtins，内置模块的命名空间。
++ builtins，内建模块的命名空间。
 
-        Python 在启动的时候会自动为我们载入很多内置的函数、类，
+        Python 在启动的时候会自动为我们载入很多内建的函数、类，
         比如 dict，list，type，print，这些都位于 __builtins__ 模块中，
         可以使用 dir(__builtins__) 来查看。
         这也是为什么我们在没有 import任何模块的情况下，
         就能使用这么多丰富的函数和功能了。
+
+        在Python中，有一个内建模块，该模块中有一些常用函数;在Python启动后，
+        且没有执行程序员所写的任何代码前，Python会首先加载该内建函数到内存。
+        另外，该内建模块中的功能可以直接使用，不用在其前添加内建模块前缀，
+        其原因是对函数、变量、类等标识符的查找是按LEGB法则，其中B即代表内建模块
+        比如：内建模块中有一个abs()函数，其功能求绝对值，如abs(-20)将返回20。
+
+            Python2.X版本中，内建模块被命名为 __builtin__
+            Python3.X版本中，更名为 builtins
+            Python2.X和Python3.X 是对内建模块一个引用 __builtins__
 
 ![builtins](media/builtins.png)
 
@@ -203,8 +213,536 @@ Python 虚拟机还会将已经 import 过的 module 缓存起来，放到一个
 >备注：如果一个正在运行的程序，模块内容修改，重新import无法更新，需要reload模块
 
 
-### 内建函数
+### 闭包
+
+内部函数对外部函数作用域里变量的引用（非全局变量），则称内部函数为闭包。
+
+```python
+# closure.py
+
+def counter(start=0):
+    count=[start]
+    def incr():
+        count[0] += 1
+        return count[0]
+    return incr
+```
+
+启动python解释器
+
+    >>>import closeure
+    >>>c1=closeure.counter(5)
+    >>>print c1()
+    6
+    >>>print c1()
+    7
+    >>>c2=closeure.counter(100)
+    >>>print c2()
+    101
+    >>>print c2()
+    102
+
+
+按值传递参数和按引用传递参数
+
+    1.按值传递,单个变量
+    2.按引用传递,列表
+
+
+闭包思考：
+
+    1.闭包似有化了变量，原来需要类对象完成的工作，闭包也可以完成
+    2.由于闭包引用了外部函数的局部变量，则外部函数的局部变量没有及时释放，消耗内存
+
+
+
 ### 装饰器函数
-### 迭代器函数
+
+装饰器(decorator)里引入通用功能处理
+
+1. 引入日志
+2. 函数执行时间统计
+3. 执行函数前预备处理
+4. 执行函数后清理功能
+5. 权限校验等场景
+6. 缓存
+
+例1:无参数的函数
+
+```python
+#decorator.py
+
+from time import ctime, sleep
+
+def timefun(func):
+    def wrappedfunc():
+        print("%s called at %s"%(func.__name__, ctime()))
+        return func()
+    return wrappedfunc
+
+@timefun
+def foo():
+    print("I am foo")
+
+foo()
+sleep(2)
+foo()
+```
+
+上面代码理解装饰器执行行为可理解成
+
+    foo = timefun(foo)
+    #foo先作为参数赋值给func后,foo接收指向timefun返回的wrappedfunc
+    foo()
+    #调用foo(),即等价调用wrappedfunc()
+    #内部函数wrappedfunc被引用，所以外部函数的func变量(自由变量)并没有释放
+    #func里保存的是原foo函数对象
+
+例2:被装饰的函数有参数
+```python
+#decorator2.py
+from time import ctime, sleep
+
+def timefun(func):
+    def wrappedfunc(a, b):
+        print("%s called at %s"%(func.__name__, ctime()))
+        print(a, b)
+        return func(a, b)
+    return wrappedfunc
+
+@timefun
+def foo(a, b):
+    print(a+b)
+
+foo(3,5)
+sleep(2)
+foo(2,4)
+```
+
+
+例3:装饰器带参数,在原有装饰器的基础上，设置外部变量
+
+```python
+#decorator2.py
+
+from time import ctime, sleep
+
+def timefun_arg(pre="hello"):
+    def timefun(func):
+        def wrappedfunc():
+            print("%s called at %s %s"%(func.__name__, ctime(), pre))
+            return func()
+        return wrappedfunc
+    return timefun
+
+@timefun_arg("itcast")
+def foo():
+    print("I am foo")
+
+@timefun_arg("xwp")
+def too():
+    print("I am too")
+
+foo()
+sleep(2)
+foo()
+
+too()
+sleep(2)
+too()
+```
+
+可以理解为 
+
+    foo()==timefun_arg("itcast")(foo)()
+
+例4:装饰器和闭包混用(难)
+
+```python
+
+#coding=utf-8
+
+from time import time
+
+def logged(when):
+    def log(f, *args, **kargs):
+        print("fun:%s  args:%r  kargs:%r" %(f, args, kargs))
+        #%r字符串的同时，显示原有对象类型
+
+    def pre_logged(f):
+        def wrapper(*args, **kargs):
+            log(f, *args, **kargs)
+            return f(*args, **kargs)
+        return wrapper
+
+    def post_logged(f):
+        def wrapper(*args, **kargs):
+            now=time()
+            try:
+                return f(*args, **kargs)
+            finally:
+                log(f, *args, **kargs)
+                print("time delta: %s"%(time()-now))
+        return wrapper
+    try:
+        return {"pre":pre_logged, "post":post_logged}[when]
+    except KeyError, e:
+        raise ValueError(e), 'must be "pre" or "post"'
+
+@logged("post")
+def fun(name):
+    print("Hello, %s"%(name))
+
+fun("itcastcpp!")
+```
+
+例5：类装饰器（扩展，非重点）
+
+要定义类型的时候，实现__call__函数，这个类型就成为可调用的。
+可以把这个类的对象当作函数来使用。
+
+```python
+class Itcast(object): 
+    def __init__(self, func): 
+        super(Itcast, self).__init__() 
+        self._func = func 
+  
+    def __call__(self):  
+        print 'class Itcast'  
+        self._func()  
+ 
+@Itcast
+def showpy():
+    print 'showpy'
+  
+showpy()
+```
+
+
+### 迭代器
+
+在Python中，很多对象都是可以通过for语句来直接遍历的，例如list、string、dict等等，这些对象都可以被称为可迭代对象。至于说哪些对象是可以被迭代访问的，就要了解一下迭代器相关的知识了。
+
+迭代器仅是一容器对象，它实现了迭代器协议。它有两个基本方法：
+
+1. next方法, 返回容器的下一个元素
+2. __iter__方法,返回迭代器自身
+
+![迭代器](media/iter.png)
+
+next()方法返回容器的下一个元素，在结尾时引发StopIteration异常。
+
+对于可迭代对象，可以使用内建函数iter()来获取它的迭代器对象.
+
+
 ### 生成器函数
+
+生成器是这样一个函数，它记住上一次返回时在函数体中的位置。对生成器函数的第二次（或第 n 次）调用跳转至该函数中间，而上次调用的所有局部变量都保持不变。
+
+生成器不仅“记住”了它数据状态；生成器还“记住”了它在流控制构造（在命令式编程中，这种构造不只是数据值）中的位置。
+生成器的特点：
+
+     1.生成器是一个函数，而且函数的参数都会保留。
+     2.迭代到下一次的调用时，所使用的参数都是第一次所保留下的，即是说，在整个所有函数调用的参数都是第一次所调用时保留的，而不是新创建的
+     3.节约内存
+
+例子：执行到yield时，gen函数作用暂时保存，返回x的值;tmp接收下次c.send("python")，send发送过来的值，c.next()等价c.send(None)
+
+```python
+#generation.py
+def gen():
+    for x in xrange(4):
+        tmp = yield x
+        if tmp == "hello":
+            print "world"
+        else:
+            print "itcastcpp ", str(tmp)
+```
+
+执行如下
+
+    >>>from generation import gen
+    >>>c=gen()
+    >>>c.next()
+    0
+    >>>c.next()
+    itcastcpp None
+    1
+    >>>c.send("python")
+    itcastcpp python
+    2
+
+
+#### 对比
+
+当需要一个非常大的列表时，为了减少内存消耗，可以使用生成器
+
+```python
+class A(object):
+    def __init__(self, i): 
+        from time import sleep, time
+        sleep(i)
+        print (time())
+
+```
+
++ []是通过遍历可迭代对象生成一个list
++ ()是直接返回可迭代对象
+
+列表形式
+![列表行为](media/gen2.png)
+
+生成器(元祖)形式
+![生成器行为](media/gen.png)
+
+#### 小结
+
++ 无限递归成为可能
++ 极大的降低了线程或进程间上下文切换的开销
++ 用户手工指定纤程调用，避免了锁开销
+
+
+### 协程
+
+协程是啥
+首先我们得知道协程是啥？协程其实可以认为是比线程更小的执行单元。为啥说他是一个执行单元，因为他自带CPU上下文。这样只要在合适的时机，我们可以把一个协程 切换到 另一个协程。只要这个过程中保存或恢复 CPU上下文那么程序还是可以运行的。
+
+
+协程和线程差异
+那么这个过程看起来比线程差不多哇。其实不然 线程切换从系统层面远不止 保存和恢复 CPU上下文这么简单。操作系统为了程序运行的高效性每个线程都有自己缓存Cache等等数据，操作系统还会帮你做这些数据的恢复操作。所以线程的切换非常耗性能。但是协程的切换只是单纯的操作CPU的上下文，所以一秒钟切换个上百万次系统都抗的住。
+
+
+协程的问题
+但是协程有一个问题，就是系统并不感知，所以操作系统不会帮你做切换。那么谁来帮你做切换？让需要执行的协程更多的获得CPU时间才是问题的关键。
+
+
+例子：
+目前的协程框架一般都是设计成 1:N 模式。所谓 1:N 就是一个线程作为一个容器里面放置多个协程。那么谁来适时的切换这些协程？答案是有协程自己主动让出CPU，也就是每个协程池里面有一个调度器，这个调度器是被动调度的。意思就是他不会主动调度。而且当一个协程发现自己执行不下去了(比如异步等待网络的数据回来，但是当前还没有数据到)，这个时候就可以由这个协程通知调度器，这个时候执行到调度器的代码，调度器根据事先设计好的调度算法找到当前最需要CPU的协程。切换这个协程的CPU上下文把CPU的运行权交个这个协程，直到这个协程出现执行不下去需要等等的情况，或者它调用主动让出CPU的API之类，触发下一次调度。对的没错就是类似于 领导人模式
+
+那么这个实现有没有问题？
+其实是有问题的，假设这个线程中有一个协程是CPU密集型的他没有IO操作，也就是自己不会主动触发调度器调度的过程，那么就会出现其他协程得不到执行的情况，所以这种情况下需要程序员自己避免。这是一个问题，假设业务开发的人员并不懂这个原理的话就可能会出现问题。
+
+最后讲讲协程的好处
+在IO密集型的程序中由于IO操作远远小于CPU的操作，所以往往需要CPU去等IO操作。同步IO下系统需要切换线程，让操作系统可以再IO过程中执行其他的东西。这样虽然代码是符合人类的思维习惯但是由于大量的线程切换带来了大量的性能的浪费，尤其是IO密集型的程序。
+
+所以人们发明了异步IO。就是当数据到达的时候触发我的回调。来减少线程切换带来性能损失。但是这样的坏处也是很大的，主要的坏处就是操作被 “分片” 了，代码写的不是 “一气呵成” 这种。 而是每次来段数据就要判断 数据够不够处理哇，够处理就处理吧，不够处理就在等等吧。这样代码的可读性很低，其实也不符合人类的习惯。 
+
+但是协程可以很好解决这个问题。比如 把一个IO操作 写成一个协程。当触发IO操作的时候就自动让出CPU给其他协程。要知道协程的切换很轻的。协程通过这种对异步IO的封装 既保留了性能也保证了代码的 容易编写和可读性。在高IO密集型的程序下很好。但是高CPU密集型的程序下没啥好处。
+
+
+### 内建函数
+
+Build-in Function,启动python解释器，输入dir(__builtins__),
+可以看到很多python解释器启动后默认加载的属性和函数，这些函数称之为内建函数，
+这些函数因为在编程时使用较多，cpython解释器用c语言实现了这些函数，启动解释器
+时默认加载。
+
+这些函数数量众多，不宜记忆，开发时不是都用到的，待用到时再help(function),
+查看如何使用，或结合百度查询即可，在这里介绍些常用的内建函数。
+
+#### range
+
+```python
+    range(stop) -> list of integers
+    range(start, stop[, step]) -> list of integers
+```
+
++ start:计数从start开始。默认是从0开始。例如range（5）等价于range（0， 5）;
++ stop:到stop结束，但不包括stop.例如：range（0， 5） 是[0, 1, 2, 3, 4]没有5
++ step:每次跳跃的间距，默认为1。例如：range（0， 5） 等价于 range(0, 5, 1)
+
+python2中range返回列表，python3中range返回一个迭代值。如果想得到列表,可通过list函数
+
+```python
+a = range(5)
+list(a)
+```
+
+#### map
+
+```python
+    map(...)
+        map(function, sequence[, sequence, ...]) -> list
+```
+
++ function:是一个函数
++ sequence:是一个或多个序列,取决于function需要几个参数
++ 返回值是一个list
+
+参数序列中的每一个元素分别调用function函数，返回包含每次function函数返回值的list。
+
+```shell
+#函数需要一个参数
+map(lambda x: x*x, [1, 2, 3])
+[1, 4, 9]
+
+#函数需要两个参数
+map(lambda x, y: x+y, [1, 2, 3], [4, 5, 6])
+[5, 7, 9]
+
+#函数为None,相当于合并参数为元祖
+map(None, [1, 3, 5, 7, 9], [2, 4, 6, 8, 10])
+[(1, 2), (3, 4), (5, 6), (7, 8), (9, 10)]
+
+#两个序列参数个数不一致时，个数少的补None
+map(None, [1, 3, 5, 7, 9], [2, 4, 6])
+[(1, 2), (3, 4), (5, 6), (7, None), (9, None)]
+
+
+```
+
+
+
+#### filter
+
+```python
+filter(...)
+    filter(function or None, sequence) -> list, tuple, or string
+
+    Return those items of sequence for which function(item) is true.  If
+    function is None, return the items that are true.  If sequence is a tuple
+    or string, return the same type, else return a list.
+```
+
++ function:接受一个参数，返回布尔值True或False
++ sequence:序列可以是str，tuple，list
+
+filter函数会对序列参数sequence中的每个元素调用function函数，最后返回的结果包含调用结果为True的元素。
+
+返回值的类型和参数sequence的类型相同
+
+
+```shell
+filter(lambda x: x%2, [1, 2, 3, 4])
+[1, 3]
+
+filter(None, "she")
+'she'
+```
+#### reduce
+
+```python
+reduce(...)
+    reduce(function, sequence[, initial]) -> value
+    
+    Apply a function of two arguments cumulatively to the items of a sequence,
+    from left to right, so as to reduce the sequence to a single value.
+    For example, reduce(lambda x, y: x+y, [1, 2, 3, 4, 5]) calculates
+    ((((1+2)+3)+4)+5).  If initial is present, it is placed before the items
+    of the sequence in the calculation, and serves as a default when the
+    sequence is empty.
+
+```
++ function:该函数有两个参数
++ sequence:序列可以是str，tuple，list
++ initial:固定初始值
+
+reduce依次从sequence中取一个元素，和上一次调用function的结果做参数再次调用function。
+第一次调用function时，如果提供initial参数，会以sequence中的第一个元素和initial
+作为参数调用function，否则会以序列sequence中的前两个元素做参数调用function。
+注意function函数不能为None。
+
+```shell
+reduce(lambda x, y: x+y, [1,2,3,4])
+10
+
+reduce(lambda x, y: x+y, [1,2,3,4], 5)
+15
+
+reduce(lambda x, y: x+y, ['aa', 'bb', 'cc'], 'dd')
+'ddaabbcc'
+
+```
+
+>在Python3里,reduce函数已经被从全局名字空间里移除了,
+它现在被放置在fucntools模块里用的话要先引入：
+>>> from functools import reduce 
+
+
+
+### functools函数
+functools 是python2.5被引人的,一些工具函数放在此包里。
+
+python2.7中
+
+![functools函数](media/py27.png)
+
+python3.5中
+
+```python
+import functools
+dir(functools)
+```
+
+python3中增加了更多工具函数，做业务开发时大多情况下用不到，此处介绍使用频率较高的2个函数。
+
+#### partial函数(偏函数)
+
+把一个函数的某些参数设置默认值，返回一个新的函数，调用这个新函数会更简单。
+```python
+import functools
+
+def showarg(*args, **kw):
+    print(args)
+    print(kw)
+
+p1=functools.partial(showarg, 1,2,3)
+p1()
+p1(4,5,6)
+p1(a='python', b='itcast')
+
+p2=functools.partial(showarg, a=3,b='linux')
+p2()
+p2(1,2)
+p2(a='python', b='itcast')
+```
+![partial](media/partial.png)
+
+#### wraps函数
+
+使用装饰器时，有一些细节需要被注意。例如，被装饰后的函数其实已经是另外一个函数了（函数名等函数属性会发生改变）。
+
+添加后由于函数名和函数的doc发生了改变，对测试结果有一些影响，例如:
+
+```python
+def note(func):
+    "note function"
+    def wrapper():
+        "wrapper function"
+        print('note something')
+        return func()
+    return wrapper
+
+@note
+def test():
+    "test function"
+    print('I am test')
+
+test()
+print(test.__doc__)
+```
+
+所以，Python的functools包中提供了一个叫wraps的装饰器来消除这样的副作用。例如：
+
+```python
+import functools
+def note(func):
+    "note function"
+    @functools.wraps(func)
+    def wrapper():
+        "wrapper function"
+        print('note something')
+        return func()
+    return wrapper
+
+@note
+def test():
+    "test function"
+    print('I am test')
+
+test()
+print(test.__doc__)
+```
+
+
 ### 作业
