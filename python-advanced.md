@@ -5,70 +5,6 @@
 ## 函数进阶
 ### 程序运行原理
 
-#### import 指令
-
-import 指令是用来载入 module 的，如果需要，也会顺道做编译的事。但 import 指令，还会做一件重要的事情就是把 import 的那个 module 的代码执行一遍，这件事情很重要。
-Python 是解释执行的，连函数都是执行的时候才创建的。如果不把那个 module 的代码执行一遍，那么 module 里面的函数都没法创建，更别提去调用这些函数了。
-
-执行代码的另外一个重要作用，就是在这个 module 的命名空间中，创建模块内定义的函数和各种对象的符号名称（也就是变量名），并将其绑定到对象上，这样其他 module 才能通过变量名来引用这些对象。
-
-Python 虚拟机还会将已经 import 过的 module 缓存起来，放到一个全局 module 集合 sys.modules 中。
-这样做有一个好处，即如果程序的在另一个地方再次 import 这个模块，Python 虚拟机只需要将全局 module 集合中缓存的那个 module 对象返回即可。
-
->备注：如果一个正在运行的程序，模块内容修改，重新import无法更新，需要reload模块
-
-#### pyc文件
-
-pyc 文件是 PyCodeObject 对象在硬盘上的表现形式。生成pyc文件:
-
-```shell
-python -m py_compile xx_module.py
-```
-
-pyc文件三大作用
-+ 创建时间，py文件比pyc文件新，则从新生成pyc
-+ magic num做运行前版本检测，版本不同从新生成pyc
-+ PyCodeObject 对象
-
-在运行期间，编译结果也就是 PyCodeObject 对象，只会存在于内存中，而当这个模块的 Python 代码执行完后，就会将编译结果保存到了 pyc 文件中，这样下次就不用编译，直接加载到内存中。
-
-这个 PyCodeObject 对象包含了 Python 源代码中的字符串，常量值，以及通过语法解析后编译生成的字节码指令。PyCodeObject 对象还会存储这些字节码指令与原始代码行号的对应关系，这样当出现异常时，就能指明位于哪一行的代码。
-
-
-
-
-### LEGB 规则
-
-Python 使用 LEGB 的顺序来查找一个符号对应的对象
-
-    locals -> enclosing function -> globals -> builtins
-
-+ locals，当前所在命名空间（如函数、模块），函数的参数也属于命名空间内的变量
-+ enclosing，外部嵌套函数的命名空间（闭包中常见）
-```python
-def fun1():
-    a = 10
-    def fun2():
-        # a 位于外部嵌套函数的命名空间
-        print(a)
-```
-+ globals，全局变量，函数定义所在模块的命名空间
-```python
-a = 1
-def fun():
-    # 需要通过 global 指令来声明全局变量
-    global a
-    # 修改全局变量，而不是创建一个新的 local 变量
-    a = 2
-```
-+ builtins，内置模块的命名空间。
-
-        Python 在启动的时候会自动为我们载入很多内置的函数、类，
-        比如 dict，list，type，print，这些都位于 __builtins__ 模块中，
-        可以使用 dir(__builtins__) 来查看。
-        这也是为什么我们在没有 import任何模块的情况下，
-        就能使用这么多丰富的函数和功能了。
-
 ### 函数返回值
 |返回对象数目|实际返回对象|
 |--|--|
@@ -99,58 +35,6 @@ c函数的封装，如len()
 
 ### 内建的方法
 包含一个隐式对象传递给c函数，如alist.append()
-
-### 垃圾回收
-
-#### 小整数对象池
-整数在程序中的使用非常广泛，Python为了优化速度，使用了小整数对象池，
-避免为整数频繁申请和销毁内存空间。
-
-Python 对小整数的定义是 [-5, 257)
-这些整数对象是提前建立好的，不会被垃圾回收。在一个 Python 
-的程序中，所有位于这个范围内的整数使用的都是同一个对象.
-
-同理，单个字母也是这样的。
-
-但是当定义2个相同的字符串时，引用计数为0，触发垃圾回收
-#### 大整数对象池
-每一个大整数，均创建一个新的对象。
-![大整数](media/id2.png)
-
-
-#### intern机制
-
-```python
-a1=”HelloWorld”
-a2=”HelloWorld”
-a3=”HelloWorld”
-a4=”HelloWorld”
-a5=”HelloWorld”
-a6=”HelloWorld”
-a7=”HelloWorld”
-a8=”HelloWorld”
-a9=”HelloWorld”
-```
-python会不会创建9个对象呢？在内存中会不会开辟9个”HelloWorld”的内存空间呢？
-想一下，如果是这样的话，我们写10000个对象，比如a1=”HelloWorld”…..a1000=”HelloWorld”，
-那他岂不是开辟了1000个”HelloWorld”所占的内存空间了呢？如果真这样，内存不就爆了吗？所以python中有这样一个机制——intern机制，让他只占用一个”HelloWorld”所占的内存空间。靠引用计数去维护何时释放。
-
-![垃圾回收](media/id.png)
-
-
-#### 小结
-
-+ 小整数[-5,257)共用对象，常驻内存
-+ 单个字符共用对象，常驻内存
-+ 单个单词，不可修改，默认开启intern机制，共用对象，引用计数为0，则销毁
-![单词垃圾回收](media/id5.png)
-+ 字符串（含有空格），不可修改，没开启intern机制，不共用对象，引用计数为0，销毁
-![垃圾回收](media/id4.png)
-+ 大整数不共用内存，引用计数为0，销毁
-![大整数垃圾回收](media/id2.png)
-
->备注：数值类型和字符串类型在 Python 中都是不可变的，这意味着你无法修改这个对象的值，每次对变量的修改，实际上是创建一个新的对象。
-![不可变](media/id6.png)
 
 ### 内建函数
 
@@ -863,7 +747,7 @@ from module1 import xxxx as 4x    #简化名称
 
 ![导入模块](media/module.png)
 
-#### 搜索路径 
+#### import 搜索路径 
 
 ```python
 import sys

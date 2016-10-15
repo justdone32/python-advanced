@@ -1,3 +1,4 @@
+[TOC]
 ## 函数进阶
 ### 程序运行原理
 一个程序是如何运行起来的？比如下面的代码
@@ -658,8 +659,31 @@ reduce(lambda x, y: x+y, ['aa', 'bb', 'cc'], 'dd')
 它现在被放置在fucntools模块里用的话要先引入：
 >>> from functools import reduce 
 
+#### sorted函数
 
+```python
+sorted(...)
+    sorted(iterable, cmp=None, key=None, reverse=False) --> new sorted list
+```
 
+![sorted](media/sorted.png)
+
+自定义cmp比较函数，返回三种情况：
+
++ x<y 返回-1
++ x>y 返回1
++ x==y 返回0
+
+```python
+def cmp_ignore_case(s1, s2):
+    u1 = s1.upper()
+    u2 = s2.upper()
+    if u1 < u2:
+        return -1
+    if u1 > u2:
+        return 1
+    return 0
+```
 ### functools函数
 functools 是python2.5被引人的,一些工具函数放在此包里。
 
@@ -743,6 +767,3 @@ def test():
 test()
 print(test.__doc__)
 ```
-
-
-### 作业
