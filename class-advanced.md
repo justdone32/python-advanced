@@ -1,18 +1,19 @@
-## 类进阶
+## 面向对象进阶
 
-实例属性,实例对象独有的属性
+### 类进阶
+### 类属性和实例属性关系
 
-类属性,类名访问类属性
-
-实例中无同名属性时，可访问到类属性，当定义同名实例属性时，则无法访问
++ 实例属性 - 实例对象独有的属性
++ 类属性 - 类名访问类属性
++ 实例中无同名属性时，可访问到类属性，当定义同名实例属性时，则无法访问
 
 >使用实例属性去修改类属性十分危险，原因在于实例拥有自己的属性集，修改类属性需要使用类名，而不是实例名。 
 
 
 
-vars : 查看实例内属性(自定义的属性)
-dir : 显示类属性和所有实例属性
-type : 显示类型
++ vars - 查看实例内属性(自定义的属性)
++ dir - 显示类属性和所有实例属性
++ type - 显示类型
 
 ### 类的方法
 而在Python中，方法分为三类实例方法、类方法、静态方法。代码如下：
@@ -34,9 +35,9 @@ type : 显示类型
         print("StaticFun")
 ```
 
-+ 实例方法隐含的参数为类实例self
-+ 类方法隐含的参数为类本身cls
-+ 静态方法无隐含参数，主要为了类实例也可以直接调用静态方法。
++ 实例方法 - 隐含的参数为类实例self
++ 类方法 - 隐含的参数为类本身cls
++ 静态方法 - 无隐含参数，主要为了类实例也可以直接调用静态方法。
 + 类名可以调用类方法和静态方法，但不可以调用实例方法
 
 
@@ -45,8 +46,7 @@ type : 显示类型
 + xx: 公有变量
 + _x: 单前置下划线,私有化属性或方法，from somemodule import *禁止导入,类对象和子类可以访问
 + __xx：双前置下划线,避免与子类中的属性命名冲突，无法在外部直接访问(名字重整所以访问不到)
-
-+ \_\_xx\_\_:双前后下划线,用户名字空间的魔法对象或属性。例如:__init__ , __
++ \_\_xx\__:双前后下划线,用户名字空间的魔法对象或属性。例如:__init__ , __
 不要自己发明这样的名字
 + xx_:单后置下划线,用于避免与Python关键词的冲突
 
@@ -179,3 +179,45 @@ print s.subject1
 print s.subject2
 
 ```
+####属性保护
+
+`@property'成为属性函数，可以对属性赋值时做必要的检查，并保证代码的清晰短小，主要有2个作用
+
++ 将类方法转换为只读属性
++ 重新实现一个属性的设置和读取方法,可做边界判定
+
+```python
+#coding=utf-8
+
+class Man(object):
+    def __init__(self, name, age):
+        self._name = name
+        self._age = age 
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def age(self):
+        return self._age
+
+    @age.setter
+    def age(self, age):
+        if not isinstance(age, int):
+            raise ValueError('age should be int')
+        if age < 0 or age > 150:
+            raise ValueError('age should be 0-150')
+        self._age = age 
+
+m = Man('jack', 32) 
+print(m.name)
+print(m.age)
+m.age = 40
+print(m.age)
+m.name = 'rose' #此处报错
+
+```
+当一个方法没有setter修饰时，无法设置该属性,如例子中的name。
+
+### 面向对象设计
