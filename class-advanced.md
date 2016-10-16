@@ -14,10 +14,6 @@ vars : 查看实例内属性(自定义的属性)
 dir : 显示类属性和所有实例属性
 type : 显示类型
 
-
-
-__doc__属性子类不继承，每个类均有自己的__doc__属性
-
 ### 类的方法
 而在Python中，方法分为三类实例方法、类方法、静态方法。代码如下：
 
@@ -146,6 +142,40 @@ class Person:
 
 子类没有实现__init__方法时，默认自动调用父类的。如定义__init__方法时，需自己手动调用父类的__init__方法。
 
-####__slots__
+|    常用专有属性   |          说明         |                 触发方式                |
+|-------------------|-----------------------|-----------------------------------------|
+| \__init__         | 构造初始化函数        | 创建实例后,赋值时使用,在__new__后       |
+| \__new__          | 生成实例所需属性      | 创建实例时                              |
+| \__class__        | 实例所在的类          |           实例.\__class__                              |
+| \__str__          | 实例字符串表示,可读性 | print(类实例),如没实现，使用repr结果    |
+| \__repr__         | 实例字符串表示,准确性 | 类实例 回车 或者 print(repr(类实例))    |
+| \__del__          | 析构                  | del删除实例                             |
+| \__dict__         | 实例自定义属性        | vars(实例.__dict__)                     |
+| \__doc__          | 类文档,子类不继承     | help(类或实例)                          |
+| \__getattribute__ | 属性访问拦截器        | 访问实例属性时，优先级高于\__dict__访问 |
 
-合理使用__slots__属性可以节省一个对象所消耗的空间。一个普通对象使用一个dict来保存它自己的属性，你可以动态地向其中添加或删除属性，但是如果使用__slots__属性，那么该对象用来保存其自身属性的结构一旦创建则不能再进行任何修改。因此使用slot结构的对象节省了一部分开销。虽然有时这是一个很有用的优化方案，但是它也可能没那么有用，因为如果Python解释器足够动态，那么它完全可以在向对象添加属性时只请求该对象所使用的dict。
+\__getattribute__例子:
+
+```python
+#coding=utf-8
+class Itcast(object):
+        def __init__(self,subject1):
+            self.subject1 = subject1
+            self.subject2 = 'cpp'
+
+        #属性访问时拦截器，打log
+        def __getattribute__(self,obj):
+            if obj == 'subject1':
+                print('log subject1')
+                return 'redirect python'
+            else:   #测试时注释掉这2行，将找不到subject2
+                return object.__getattribute__(self,obj)
+
+        def show(self):
+            print 'this is Itcast'
+    
+s = Itcast('python')
+print s.subject1
+print s.subject2
+
+```
