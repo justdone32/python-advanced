@@ -131,43 +131,6 @@ sys.getcheckinterval() # 100
     break      except     in         raise
 
 
-## 编码规范
-### 错误认知
-
-+ 这很浪费时间
-+ 我是个艺术家
-+ 所有人都能穿的鞋不会合任何人的脚
-+ 我善长制定编码规范
-
-### 正确认知
-
-+ 促进团队合作
-+ 减少bug处理 
-+ 提高可读性，降低维护成本 
-+ 有助于代码审查
-+ 养成习惯，有助于程序员自身的成长
-
-### pep8 编码规范
-
-Python Enhancement Proposals ：python改进方案
-
-[https://www.python.org/dev/peps/](https://www.python.org/dev/peps/)
-
-![pep](media/pep0.png)
-
-pep8 官网规范地址
-
-[https://www.python.org/dev/peps/pep-0008/](https://www.python.org/dev/peps/pep-0008/)
-
-![pep8](media/pep8.png)
-
-
-风格指南强调一致性。项目、模块或函数保持一致都很重要。
-
-两张代码图说明编码风格
-
-https://my.oschina.net/u/1433482/blog/464444?p=1
-http://blog.sae.sina.com.cn/archives/4781
 
 
 
@@ -564,61 +527,6 @@ Python中的字符串模块string，在py2和py3之间有很大的区别。原�
             是否为另一个集合的超集
 
 
-### 为什么有了列表还需要元祖
-两者的性质不同: 元祖中的元素不可变，列表可变。元祖的不可变性提供了某种完整性，这样你可以确保元祖在程序中不会被另一个引用改变，而列表就没法保证了。
-
-元祖可以用在列表无法使用的情况中，例如，集合。因为集合中的元素是不可变的，当添加列表到集合中时会报错，而添加元素却不会报错。
-    
-
-### 引用vs拷贝
-+ 引用
-    赋值操作产生对象的引用。
-    
-    例如: a = "abc"，a就是对于字符串对象"abc"的引用。
-    
-+ 浅拷贝
-    + 浅拷贝是对于一个对象的顶层拷贝。
-    
-    + 如何浅拷贝
-        + 分片表达式可以赋值一个序列
-            
-            a = "abc"
-            
-            b = a[:]
-            
-        + 字典的copy方法可以拷贝一个字典
-            
-            d = dict(name="zhangsan", age=27")
-            
-            co = d.copy()
-        
-        + 有些内置函数可以生成拷贝(list)
-        
-            a = list(range(10))
-            
-            b = list(a)
-        
-        + copy模块中的copy函数
-        
-            import copy
-            
-            a = (1,2,3)
-            
-            b = copy.copy(a)
-        
-+ 深拷贝
-    + 深拷贝是对于一个对象所有层次的拷贝(递归)。
-    
-    + 如何深拷贝
-    
-        copy模块中的deepcopy函数。
-        
-        import copy
-        
-        a = ["name", [1,2,3], "age"]
-        
-        co = copy.deepcopy(a)
-
 
 ## 字符串编解码进阶
 ### 字符串基础知识
@@ -796,142 +704,13 @@ reload(module)
 
 
 
-### 循环导入
-#### 为什么会出现循环导入
-
-![循环导入错误](media/importerr1.png)
-
-再看一个例子
-
-
-a.py
-```python
-from b import b 
-
-print '---------this is module a.py----------'
-def a():
-    print "hello, a"   
-    b() 
-
-a()
-```
-b.py
-```python
-from a import a
-
-print '----------this is module b.py----------'
-def b():
-    print "hello, b"
-
-def c():
-    a() 
-c()
-```
-运行python a.py
-
-![循环导入错误](media/importerr.png)
-
-#### 怎样避免循环导入
-
-1. 程序设计上分层，降低耦合
-2. 导入语句放在后面需要导入时再导入
-3. 放在函数体内导入
 
 ### importlib
 
 
 ## 常用标准库和扩展库进阶
-### 常用标准库
-+ buildins
-+ os
-+ sys
-+ functools
-+ json
-+ logging
-+ multiprocessing
-+ threading
-+ copy
-+ datetime
-+ calendar
-+ hashlib
-+ random
-+ re
-+ socket
-
-### 常用扩展库
-+ requests
-+ urllib
-+ scrapy
-+ beautifulsoup4
-+ celery
-+ redis
-+ Pillow
-+ xlsxwriter
-+ xlrd
-+ haystack
-+ elasticsearch
-+ pymysql
-+ mongoengine/pymongo
 
 
-
-### 共享引用和相等
-
-在Python中先创建一个对象，然后再将变量指向所创建的对象。
-对于每个对象，都有一个头部信息，在信息中就标记了这个对象的类型信息。每当一个变量名被赋予了一个新的对象，之前那个对象占用的空间就回被回收（如果此时这个对象没有被别的变量名或者对象所引用的话）。另外，在python中，每个对象都保有一个计数器，计数器中记录了这个对象被引用的次数，当这个计数器被置为0时，对象所占用的内存空间就会被释放，即当做垃圾回收。
-共享引用：
-在python中，变量总是一个指向对象的指针，而不是可以改变的内存区域标签。给一个变量赋予一个新的值，不是替换了原始的对象，而是让这个变量去引用一个新的对象，实际效果就是对变量重新赋值，这仅仅会影响到那个被重新赋值的变量。
-另外，在这里说一下 “ == ”和“ is ”这个操作符
-==，和C语言中的作用是一样的，测试两个被引用的对象的值是否一致；
-is，检查两个对象的同一性，判断两个对象名是否指向同一地址空间，如果是则返回True。如图，
-
-
-创建两个列表对象，即使它们的值相同，也是来源于不同的空间。因此is的比较结果为假
-也许有的朋友测试了一个如上图的例子，结果 is 竟然返回True。这不是代表它们是指向同一个对象，而是在内存中，小的整数和字符串被缓存复用了，所以is才告诉我们a和b是引用了相同的对象。
-
-### 语句执行时间
-
-+ 测试语句运行时间
-```python
-python -mtimeit -s 'from decimal import Decimal' '3.14+5.67'
-python -mtimeit -s 'from decimal import Decimal' 'Decimal("3.14")+Decimal("5.67")'
-```
-![测试](media/timeittest.png)
-
-+ 测试函数运行时间
-
-```python
-import time
- 
-def time_me(fn):
-    def _wrapper(*args, **kwargs):
-        start = time.clock()
-        fn(*args, **kwargs)
-        print("%s cost %s second"%(fn.__name__, time.clock() - start))
-    return _wrapper
- 
-@time_me
-def test(x, y):
-    time.sleep(0.1)
- 
-@time_me
-def test2(x):
-    time.sleep(0.2)
- 
-test(1, 2)
-test2(2)
-```
-
-+ 测试文件运行时间
-
-```shell
-$ time -p python testfile.py
-
-Total time running : 1.3931210041 seconds
-real 1.49    表示的是执行脚本的总时间
-user 1.40    表示的是执行脚本消耗的CPU时间。
-sys 0.08     表示的是执行内核函数消耗的时间
-```
 
 
 
