@@ -11,6 +11,7 @@
     * [functools函数](function-advanced/s7.md)
     * [作业](function-advanced/s8.md)
 * [面向对象进阶](class-advanced.md)
+    * [面向对象进阶](class-advanced/s1.md)
 * [模块进阶](module-advanced/s1.md)
 * [调试](debug-advanced/s1.md)
 * [编码风格](pep8-advanced/s1.md)
